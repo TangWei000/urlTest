@@ -59,13 +59,13 @@ public class UrlinfoController {
     public String redirect(@PathVariable String shortURL) {
         String longURL = urlinfoService.getLongUrlByShortUrl(shortURL).trim();
         if (longURL != null) {
-            //修改访问数
-            QueryWrapper<Urlinfo> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(Urlinfo::getShirtUrl,shortURL);
-            Urlinfo one = urlinfoService.getOne(queryWrapper);
-            UpdateWrapper<Urlinfo> updateWrapper = new UpdateWrapper<>();
-            updateWrapper.lambda().set(Urlinfo::getVisits,one.getVisits()+1).eq(Urlinfo::getShirtUrl,shortURL);
-            urlinfoService.update(updateWrapper);
+//            //修改访问数
+//            QueryWrapper<Urlinfo> queryWrapper = new QueryWrapper<>();
+//            queryWrapper.lambda().eq(Urlinfo::getShirtUrl,shortURL);
+//            Urlinfo one = urlinfoService.getOne(queryWrapper);
+//            UpdateWrapper<Urlinfo> updateWrapper = new UpdateWrapper<>();
+//            updateWrapper.lambda().set(Urlinfo::getVisits,one.getVisits()+1).eq(Urlinfo::getShirtUrl,shortURL);
+//            urlinfoService.update(updateWrapper);
             //查询到对应的原始链接，重定向
             return "redirect:" + longURL;
         }

@@ -11,11 +11,16 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -71,26 +76,48 @@ public class UrlinfoServiceImpl extends ServiceImpl<UrlinfoMapper, Urlinfo>
 
     @Override
     public String getLongUrlByShortUrl(String shortURL) {
-
         String longUrl = (String)redisUtil.get(shortURL);
         if (longUrl != null){
-            //有缓存
+            //有缓存,更新过期时间
             redisUtil.expire(shortURL,TIMEOUT);
-
+            //访问数
+            redisTemplate.opsForValue().increment(shortURL+"/count",1);
             return longUrl;
         }
         //没有缓存
         if (!redisTemplate.hasKey(shortURL)){
-            System.out.println("存储新值");
+
             Urlinfo urlinfo = urlinfoMapper.selectOne(Wrappers.<Urlinfo>lambdaQuery()
                     .select(Urlinfo::getShirtUrl, Urlinfo::getLongUrl, Urlinfo::getCreateBy)
                     .eq(Urlinfo::getShirtUrl, shortURL));
             if (urlinfo != null){
+                System.out.println("Redis存值");
                 longUrl = urlinfo.getLongUrl();
                 redisTemplate.opsForValue().set(shortURL,longUrl,TIMEOUT);
             }
         }
         return longUrl;
+    }
+
+    /**
+     * 修改访问人数
+     * @return
+     */
+    @Override
+    @Scheduled(fixedRate = 10000)
+    public void updateVisits() {
+        List<Urlinfo> urlinfos = urlinfoMapper.selectList(null);
+        if (urlinfos != null){
+            for (Urlinfo u: urlinfos) {
+                if (redisTemplate.hasKey(u.getShirtUrl())){
+                    if ((redisTemplate.opsForValue().get(u.getShirtUrl() + "/count"))!=null){
+                        int visits = Integer.parseInt(String.valueOf(redisTemplate.opsForValue().get(u.getShirtUrl() + "/count")));
+                        urlinfoMapper.updateVisits(u.getShirtUrl(), visits);
+                        System.out.println(u.getShirtUrl() + "访问数:" + visits);
+                    }
+                }
+            }
+        }
     }
 }
 

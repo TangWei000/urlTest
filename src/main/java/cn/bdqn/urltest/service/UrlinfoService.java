@@ -16,4 +16,6 @@ public interface UrlinfoService extends IService<Urlinfo> {
     public String saveUrlinfo(String longUrl,String createBy);
 
     public String getLongUrlByShortUrl(String shortURL);
+
+    public void updateVisits();
 }

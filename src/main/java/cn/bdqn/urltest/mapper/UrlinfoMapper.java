@@ -2,6 +2,8 @@ package cn.bdqn.urltest.mapper;
 
 import cn.bdqn.urltest.domain.Urlinfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 
 /**
@@ -11,7 +13,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity generator.domain.Urlinfo
 */
 public interface UrlinfoMapper extends BaseMapper<Urlinfo> {
-
+    @Update("update urlinfo set visits = #{visits} where shirt_url = #{shortUrl}")
+    int updateVisits(@Param("shortUrl")String shortUrl, @Param("visits") int visits);
 }
 
 
